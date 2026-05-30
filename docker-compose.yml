@@ -1,0 +1,13 @@
+services:
+  postgres:
+    image: postgres:16
+
+    container_name: mvcc_postgres
+
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: mvcc_wiki
+
+    ports:
+      - "5433:5432"

@@ -1,7 +1,5 @@
 import time
-
 from db import get_connection
-
 
 def count_versions():
     conn = get_connection()

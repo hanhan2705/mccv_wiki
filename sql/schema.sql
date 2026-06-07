@@ -2,7 +2,7 @@ CREATE TABLE Page_Content (
     PageID    INT NOT NULL,
     VersionID BIGSERIAL,
     Content   TEXT NOT NULL,
-    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    Timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (VersionID)
 );
 

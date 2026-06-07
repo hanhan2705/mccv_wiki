@@ -1,14 +1,14 @@
 from wiki_service import edit_page
 import threading
 
-
+print("\n=== 10 Writer đồng thời cập nhật PageID=1 ===\n")
 def worker(index):
     edit_page(
         1,
-        f"Update from Writer {index}"
+        f"Writer {index} cập nhật nội dung."
     )
 
-    print(f"Writer {index} finished")
+    print(f"Writer {index} hoàn thành cập nhật.")
 
 
 threads = []
@@ -25,4 +25,4 @@ for i in range(10):
 for t in threads:
     t.join()
 
-print("\nAll writers finished")
+print("\n Tất cả các writer đều cập nhật hoàn tất.\n")

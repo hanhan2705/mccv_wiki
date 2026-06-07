@@ -138,4 +138,6 @@ if __name__ == "__main__":
     for row in rows:
         print(row)
 
+    compare_storage_overhead(1)
+
     print("\n===== END ANALYSIS =====")

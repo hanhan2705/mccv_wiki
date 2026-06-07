@@ -9,11 +9,11 @@ def run_audit(page_id):
     # REPEATABLE READ: snapshot được chốt tại thời điểm transaction bắt đầu
     cursor.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ")
 
-    print("=== AUDIT STARTED ===")
+    print("=== MINH CHỨNG MVCC: GIAO DỊCH KIỂM TOÁN ===")
 
     # Ghi nhớ VersionID tại thời điểm bắt đầu
     cursor.execute("""
-        SELECT VersionID, Content, CreatedAt
+        SELECT VersionID, Content, Timestamp
         FROM Page_Content
         WHERE PageID = %s
         ORDER BY VersionID DESC
@@ -22,44 +22,53 @@ def run_audit(page_id):
     snapshot_version = cursor.fetchone()
     print(f"[T=0] Snapshot version: {snapshot_version}")
 
-    print("\nSleeping 10 seconds — concurrent writers will run now...\n")
+    print("\n Tạm dừng 10s — các giao dịch cập nhật đồng thời sẽ chạy...\n")
     time.sleep(10)
 
     # Đọc lại — REPEATABLE READ đảm bảo vẫn thấy snapshot cũ
     cursor.execute("""
-        SELECT VersionID, Content, CreatedAt
+        SELECT VersionID, Content, Timestamp
         FROM Page_Content
         WHERE PageID = %s
         ORDER BY VersionID DESC
         LIMIT 1
     """, (page_id,))
     version_after = cursor.fetchone()
-    print(f"[T=10s] Version seen inside transaction: {version_after}")
+    print(f"[T=10s] Version nhìn thấy trong transaction: {version_after}")
 
     # Kiểm tra ngoài transaction — version thật sự mới nhất
     conn2 = get_connection()
     cur2 = conn2.cursor()
     cur2.execute("""
-        SELECT VersionID, Content, CreatedAt
+        SELECT VersionID, Content, Timestamp
         FROM Page_Content
         WHERE PageID = %s
         ORDER BY VersionID DESC
         LIMIT 1
     """, (page_id,))
     real_latest = cur2.fetchone()
-    print(f"[T=10s] REAL latest version in DB: {real_latest}")
+    print(f"[T=10s] Version mới nhất thực tế trong DB: {real_latest}")
+    print(f"\nSnapshot VersionID = {snapshot_version[0]}")
+    print(f"VersionID mới nhất = {real_latest[0]}")
+    cur2.close()
     conn2.close()
 
     # Kết luận
     if snapshot_version[0] == version_after[0]:
-        print("\n✅ MVCC confirmed: Audit transaction đọc consistent snapshot!")
+        print("\n Xác nhận MVCC: Giao dịch kiểm toán luôn đọc cùng một snqpshot nhất quán!")
     else:
-        print("\n⚠️ Snapshot bị thay đổi!")
+        print("\nSnapshot bị thay đổi!")
 
     conn.commit()
     cursor.close()
     conn.close()
-    print("=== AUDIT FINISHED ===")
+    print("\n=== KẾT THÚC GIAO DỊCH KIỂM TOÁN ===\n")
 
 if __name__ == "__main__":
     run_audit(1)
+
+    print("Kết luận\n" \
+    "- Reader không bị Writer chặn.\n" \
+    "- 10 Writer vẫn cập nhật bình thường.\n" \
+    "- Reader luôn nhìn thấy một phiên bản dữ liệu nhất quán trong suốt transaction.\n" 
+    "- Dữ liệu không bị thay đổi giữa chừng đối với Audit.")

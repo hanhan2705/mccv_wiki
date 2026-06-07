@@ -1,6 +1,6 @@
 import coordinator
 
-def edit_page(page_id: int, new_content: str, max_versions: int = 5):
+def edit_page(page_id: int, new_content: str, max_versions: int = 100):
     conn = coordinator.get_connection(page_id)
     try:
         cursor = conn.cursor()
@@ -24,7 +24,7 @@ def edit_page(page_id: int, new_content: str, max_versions: int = 5):
 
         conn.commit()
         site = coordinator.get_site_name(page_id)
-        print(f"[Site {site}] New version created for PageID={page_id} (kept last {max_versions})")
+        print(f"[Site {site}] Đã tạo phiên bản mới cho PageID={page_id} (giữ lại {max_versions} phiên bản mới nhất)")
 
     except Exception as e:
         conn.rollback()
@@ -57,7 +57,7 @@ def get_version_history(page_id: int, limit: int = 5):
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT VersionID, Content, CreatedAt
+        SELECT VersionID, Content, Timestamp
         FROM Page_Content
         WHERE PageID = %s
         ORDER BY VersionID DESC

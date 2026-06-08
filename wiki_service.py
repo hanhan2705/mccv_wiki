@@ -1,6 +1,6 @@
 import coordinator
 
-def edit_page(page_id: int, new_content: str, max_versions: int = 100):
+def edit_page(page_id: int, new_content: str, max_versions: int = 5):
     conn = coordinator.get_connection(page_id)
     try:
         cursor = conn.cursor()

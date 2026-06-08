@@ -109,15 +109,6 @@ def _measure_historical_read(page_id: int, cur, runs: int = 30) -> float:
 
 
 def compare_storage_overhead(page_id: int = 1):
-    """
-    Phân tích tác động của chính sách giữ N version/page lên:
-      1. Storage Overhead  : ước tính số rows được giữ nếu áp dụng chính sách N version/page.
-      2. Query Performance : historical read (LIMIT HISTORICAL_READ_LIMIT) trên data thực tế.
-
-    Dùng data thực tế trong DB — không cần seed/rollback.
-    Insight đúng của MVCC: storage tiết kiệm tuyến tính theo N, nhưng
-    hiệu năng historical read gần như không đổi nhờ index của PostgreSQL.
-    """
     total_versions = count_versions()
     page_stats     = versions_per_page()
 
@@ -133,7 +124,6 @@ def compare_storage_overhead(page_id: int = 1):
 
     print("\n===== VERSION LIMIT vs STORAGE & QUERY PERFORMANCE =====")
     print(f"(Tổng versions hiện có trong DB: {total_versions})")
-    print(f"(Historical read: SELECT ... ORDER BY VersionID DESC LIMIT {HISTORICAL_READ_LIMIT})")
     print(f"{'Chính sách':<12} {'Est. Versions':<15} {'Est. Storage':<16} {'Avg Query (ms)':<18} {'Ghi chú'}")
     print("-" * 75)
 

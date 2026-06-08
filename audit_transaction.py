@@ -1,8 +1,8 @@
-from db import get_connection
+from coordinator import get_connection
 import time
 
 def run_audit(page_id):
-    conn = get_connection()
+    conn = get_connection(page_id)
     conn.autocommit = False
     cursor = conn.cursor()
 
@@ -20,7 +20,7 @@ def run_audit(page_id):
         LIMIT 1
     """, (page_id,))
     snapshot_version = cursor.fetchone()
-    print(f"[T=0] Snapshot version: {snapshot_version}")
+    print(f"[T=0] Phiên bản snapshot tại thời điểm bắt đầu: {snapshot_version}")
 
     print("\n Tạm dừng 10s — các giao dịch cập nhật đồng thời sẽ chạy...\n")
     time.sleep(10)
@@ -34,10 +34,10 @@ def run_audit(page_id):
         LIMIT 1
     """, (page_id,))
     version_after = cursor.fetchone()
-    print(f"[T=10s] Version nhìn thấy trong transaction: {version_after}")
+    print(f"[T=10s] Phiên bản được nhìn thấy bên trong giao dịch: {version_after}")
 
     # Kiểm tra ngoài transaction — version thật sự mới nhất
-    conn2 = get_connection()
+    conn2 = get_connection(page_id)
     cur2 = conn2.cursor()
     cur2.execute("""
         SELECT VersionID, Content, Timestamp
@@ -47,15 +47,15 @@ def run_audit(page_id):
         LIMIT 1
     """, (page_id,))
     real_latest = cur2.fetchone()
-    print(f"[T=10s] Version mới nhất thực tế trong DB: {real_latest}")
-    print(f"\nSnapshot VersionID = {snapshot_version[0]}")
+    print(f"[T=10s] Phiên bản mới nhất thực tế trong cơ sở dữ liệu:: {real_latest}")
+    print(f"\nPhiên bản snapshot tại thời điểm bắt đầu = {snapshot_version[0]}")
     print(f"VersionID mới nhất = {real_latest[0]}")
     cur2.close()
     conn2.close()
 
     # Kết luận
     if snapshot_version[0] == version_after[0]:
-        print("\n Xác nhận MVCC: Giao dịch kiểm toán luôn đọc cùng một snqpshot nhất quán!")
+        print("\n Xác nhận MVCC: Giao dịch kiểm toán luôn đọc cùng một snapshot nhất quán!")
     else:
         print("\nSnapshot bị thay đổi!")
 

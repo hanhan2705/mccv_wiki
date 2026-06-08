@@ -5,7 +5,7 @@ print("\n=== 10 Writer đồng thời cập nhật PageID=1 ===\n")
 def worker(index):
     edit_page(
         1,
-        f"Writer {index} cập nhật nội dung."
+        f"Update from Writer {index}."
     )
 
     print(f"Writer {index} hoàn thành cập nhật.")

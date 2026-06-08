@@ -36,7 +36,7 @@ def demo_write_to_offline_site():
         return
 
     # Site A vẫn phục vụ PageID lẻ bình thường
-    print("--- Ghi vào Site A (PageID=1, lẻ) ---")
+    print("--- Thử ghi vào Site A (PageID=1, Content=""Written during Site B failure — Site A still works"") ---")
     try:
         edit_page(1, "Written during Site B failure — Site A still works")
         latest = get_latest_version(1)
@@ -45,13 +45,14 @@ def demo_write_to_offline_site():
         print(f"Site A cũng lỗi: {e}\n")
 
     # Thử ghi PageID chẵn → Site B → fail gracefully
-    print("--- Thử ghi vào Site B (PageID=2, chẵn) ---")
+    print("--- Thử ghi vào Site B (PageID=2, Content=""This write should fail — Site B is down"") ---")
     try:
         edit_page(2, "This write should fail — Site B is down")
         print("Ghi thành công (Site B đang online)\n")
     except Exception as e:
         print(f" Failure detected gracefully: {e}")
-        print("  Site A không bị ảnh hưởng — dữ liệu PageID lẻ vẫn an toàn.\n")
+        print("Xác minh dữ liệu không được ghi vào Site B")
+        print("Site A không bị ảnh hưởng — dữ liệu PageID lẻ vẫn an toàn.\n")
 
 
 def demo_read_during_failure():
@@ -59,7 +60,9 @@ def demo_read_during_failure():
     try:
         latest = get_latest_version(1)
         if latest:
-            print(f"Đọc Site A thành công — VersionID: {latest[0]}")
+            print(f"Đọc thành công. "
+                  f"Phiên bản mới nhất: {latest[1]}, "
+                  f"Nội dung: {latest[2]}")
         else:
             print("Không có dữ liệu trong Site A")
     except Exception as e:

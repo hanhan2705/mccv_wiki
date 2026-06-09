@@ -87,11 +87,6 @@ HISTORICAL_READ_LIMIT = 5
 
 
 def _measure_historical_read(page_id: int, cur, runs: int = 30) -> float:
-    """
-    Đo avg query time của một "historical read" — luôn dùng LIMIT cố định
-    để phản ánh đúng pattern: đọc N phiên bản gần nhất.
-    Nhận cursor từ bên ngoài để tái sử dụng connection hiện có.
-    """
     timings = []
     for _ in range(runs):
         t0 = time.perf_counter()
@@ -138,28 +133,18 @@ def compare_storage_overhead(page_id: int = 1):
 
         ratio    = kept / total_versions if total_versions > 0 else 0
         avg_time = _measure_historical_read(page_id, cur, runs=30)
-
-        diff = baseline_time - avg_time
-        pct  = abs(diff) / baseline_time * 100 if baseline_time > 0 else 0
-
+        
         if limit is None:
             note = "← baseline"
         else:
             storage_saved = (1 - ratio) * 100
-            perf_note = f", query nhanh hơn {pct:.1f}%" if diff > 0 else f", query ±{pct:.1f}%"
-            note = f"tiết kiệm ~{storage_saved:.0f}% storage{perf_note}"
+            
+            note = f"tiết kiệm ~{storage_saved:.0f}% storage"
 
         print(f"{label:<12} {kept:<15} ~{ratio*100:.1f}%{'':<11} {avg_time:<18.4f} {note}")
 
     cur.close()
     conn.close()
-
-    print()
-    print(f"→ Kết luận: Chính sách giữ ít version tiết kiệm storage tuyến tính,")
-    print(f"  nhưng historical read (LIMIT {HISTORICAL_READ_LIMIT}) gần như không đổi tốc độ")
-    print(f"  vì PostgreSQL index cho phép lấy {HISTORICAL_READ_LIMIT} rows đầu mà không cần full scan.")
-
-
 
 if __name__ == "__main__":
 
